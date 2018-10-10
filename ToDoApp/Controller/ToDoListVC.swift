@@ -34,6 +34,9 @@ class ToDoListVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         
         navigationController?.navigationBar.tintColor = UIColor.white  // 注意
         navigationController?.navigationBar.barTintColor = #colorLiteral(red: 0.2392156869, green: 0.6745098233, blue: 0.9686274529, alpha: 1)          // 注意
+        
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.add, target: self, action: #selector(addBtnTouched))
+        
         todoListView = ToDoListView(frame: self.view.frame)
         self.view.addSubview(todoListView)
         tableView = todoListView.tableView  // 注意
@@ -64,4 +67,27 @@ class ToDoListVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
+    // MARK: Add Button Touched
+    @objc func addBtnTouched() {
+        
+        var textField = UITextField()
+        
+        let alert = UIAlertController(title: "Add New ToDoey Item", message: "", preferredStyle: UIAlertController.Style.alert)
+        
+        alert.addTextField { (alertTextField) in
+            alertTextField.placeholder = "Create New Item"
+            textField = alertTextField
+        }
+        
+        let action = UIAlertAction(title: "Add Item", style: UIAlertAction.Style.default) { (action) in
+            if !(textField.text?.isEmpty)! {
+                self.itemArray.append(textField.text!)
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
+            }
+        }
+        alert.addAction(action)
+        self.present(alert, animated: true, completion: nil)
+    }
 }
