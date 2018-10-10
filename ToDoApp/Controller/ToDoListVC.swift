@@ -13,7 +13,8 @@ class ToDoListVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
     var todoListView: ToDoListView!
     var tableView: UITableView!
-    var itemArray = [String]()
+    let dataService = DataService()
+    var itemArray = [ToDoItem]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,13 +22,12 @@ class ToDoListVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         title = "ToDoey"
         tableView.delegate = self       // 注意
         tableView.dataSource = self     // 注意
-        prepareData()                   // 注意
-    }
-    
-    func prepareData() {
-        itemArray.append("ToDo Item 1")
-        itemArray.append("ToDo Item 2")
-        itemArray.append("ToDo Item 3")
+        
+        itemArray = dataService.getAll()
+        
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+        }
     }
     
     private func setupLayout() {
@@ -49,7 +49,8 @@ class ToDoListVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoCell", for: indexPath)
-        cell.textLabel?.text = itemArray[indexPath.row]
+        
+        cell.textLabel?.text = itemArray[indexPath.row].todoItem
         return cell
     }
     
@@ -81,7 +82,9 @@ class ToDoListVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         
         let action = UIAlertAction(title: "Add Item", style: UIAlertAction.Style.default) { (action) in
             if !(textField.text?.isEmpty)! {
-                self.itemArray.append(textField.text!)
+                let todoItem = ToDoItem(todo: textField.text!)
+                self.dataService.add(item: todoItem)
+                self.itemArray = self.dataService.getAll()
                 DispatchQueue.main.async {
                     self.tableView.reloadData()
                 }
