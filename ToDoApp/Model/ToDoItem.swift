@@ -11,7 +11,9 @@ import Foundation
 class ToDoItem {
     
     var todoItem : String
+    
     init(todo: String) {
         self.todoItem = todo
     }
+    
 }

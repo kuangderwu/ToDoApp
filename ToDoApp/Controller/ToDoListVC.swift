@@ -15,6 +15,7 @@ class ToDoListVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     var tableView: UITableView!
     let dataService = DataService()
     var itemArray = [ToDoItem]()
+    let defaults = UserDefaults.standard
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -23,7 +24,15 @@ class ToDoListVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         tableView.delegate = self       // 注意
         tableView.dataSource = self     // 注意
         
-        itemArray = dataService.getAll()
+    //    itemArray = dataService.getAll()
+        
+        if let items = defaults.array(forKey: "todoItems") {
+            for item in (items as? [String])! {
+                let toDo = ToDoItem(todo: item)
+                itemArray.append(toDo)
+            }
+        }
+        
         
         DispatchQueue.main.async {
             self.tableView.reloadData()
@@ -85,9 +94,20 @@ class ToDoListVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
                 let todoItem = ToDoItem(todo: textField.text!)
                 self.dataService.add(item: todoItem)
                 self.itemArray = self.dataService.getAll()
+
+                var strArray = [String]()
+                
+                for item in self.itemArray {
+                    strArray.append(item.todoItem)
+                }
+                
+                self.defaults.set(strArray, forKey: "todoItems")
+                
                 DispatchQueue.main.async {
                     self.tableView.reloadData()
                 }
+                
+                
             }
         }
         alert.addAction(action)
