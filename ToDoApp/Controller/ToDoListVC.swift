@@ -10,12 +10,11 @@ import UIKit
 
 class ToDoListVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
 
-    
     var todoListView: ToDoListView!
     var tableView: UITableView!
     let dataService = DataService()
     var itemArray = [ToDoItem]()
-    let defaults = UserDefaults.standard
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -24,15 +23,8 @@ class ToDoListVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         tableView.delegate = self       // 注意
         tableView.dataSource = self     // 注意
         
-    //    itemArray = dataService.getAll()
-        
-        if let items = defaults.array(forKey: "todoItems") {
-            for item in (items as? [String])! {
-                let toDo = ToDoItem(todo: item)
-                itemArray.append(toDo)
-            }
-        }
-        
+   
+        itemArray = dataService.loadFromFile()
         
         DispatchQueue.main.async {
             self.tableView.reloadData()
@@ -59,7 +51,9 @@ class ToDoListVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoCell", for: indexPath)
         
-        cell.textLabel?.text = itemArray[indexPath.row].todoItem
+        cell.textLabel?.text = itemArray[indexPath.row].title
+        cell.accessoryType = itemArray[indexPath.row].done ? .checkmark : .none
+        
         return cell
     }
     
@@ -68,14 +62,15 @@ class ToDoListVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         // Some action after select
-        if  tableView.cellForRow(at: indexPath)?.accessoryType ==  .checkmark {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .none
-        } else {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
+        let flag = itemArray[indexPath.row].done
+        itemArray[indexPath.row].done = !flag
+        dataService.saveToFile(items: itemArray)
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
         }
-        
         tableView.deselectRow(at: indexPath, animated: true)
     }
+    
     
     // MARK: Add Button Touched
     @objc func addBtnTouched() {
@@ -92,22 +87,13 @@ class ToDoListVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         let action = UIAlertAction(title: "Add Item", style: UIAlertAction.Style.default) { (action) in
             if !(textField.text?.isEmpty)! {
                 let todoItem = ToDoItem(todo: textField.text!)
-                self.dataService.add(item: todoItem)
-                self.itemArray = self.dataService.getAll()
+                self.itemArray.append(todoItem)
 
-                var strArray = [String]()
-                
-                for item in self.itemArray {
-                    strArray.append(item.todoItem)
-                }
-                
-                self.defaults.set(strArray, forKey: "todoItems")
+                self.dataService.saveToFile(items: self.itemArray)
                 
                 DispatchQueue.main.async {
                     self.tableView.reloadData()
                 }
-                
-                
             }
         }
         alert.addAction(action)
